@@ -1,16 +1,29 @@
-function M = NDcell2Mat( C, V )
+function M = NDcell2mat( C, V )
 %NDCELL2MAT Cell2mat for an array-cell structure of any length.
 %   M = NDCELL2MAT( C ) converts a unidimensional cell array C with
 %   contents of the same data type into a single matrix M. There is no
 %   need for the dimensions of the cell's contents to match.
 %
-%   M = NDCELL2MAT( C, V ) fills in incongruent dimensions specified by V.
-%   V must be a numeric value that specified the values that fill in the
-%   output M where values did not expist in that dimension of input C.
-%   Acceptable inputs for V are: nan, 0, or 1.
+%   M = NDCELL2MAT( C, V ) fills incongruent dimensions with the filler value V.
+%   If V is omitted, NaN is used as the default filler.
+%
+%   Filler value V behavior:
+%   - If V is numeric, it is used directly as the filler value.
+%   - If V is a char or string, the function attempts to interpret it:
+%     'NaN', 'NaNs' -> NaN; 'Zero', 'Zeros', '0' -> 0; 'Inf', 'Infinity' -> Inf;
+%     or the function tries str2num(V); if that fails, Inf is used.
+%     A warning is issued when a string/char V is detected.
+%   - Non-numeric, non-char/string V is silently coerced to Inf.
+%
+%   Output layout:
+%   Cell contents are linearised (C{k}(:)) and laid along the first singleton
+%   dimension of C. Output size equals size(C) with that singleton dimension
+%   replaced by max(cellfun(@numel, C)).
 %
 %   NDCELL2MAT currently only supports numeric data.
-%   
+%   Logical-content cells are not supported; convert first with
+%   cellfun(@double, C, 'UniformOutput', false).
+%
 %   % Example:  5x1
 %   C = { [0]; [1 2 3]; [4; 5]; NaN; [6 7 8 9 10] };
 %   M = NDCELL2MAT( C )
@@ -36,14 +49,13 @@ function M = NDcell2Mat( C, V )
 %   for idx = 1:G.numnodes()
 %       C{ idx } = G.neighbors( idx );
 %   end
-%   M   = NDCELL2MAT( C, randi( 100, 1 ) ) % View all nodes' neighbors at once.
-%
+%   M = NDCELL2MAT( C, randi( 100, 1 ) ) % View all nodes' neighbors at once.
 %
 %   Written by: Dominik Mattioli
 %   Functionality revisions suggested by: Stephen Cobeldick
 %   (https://www.mathworks.com/matlabcentral/profile/authors/3102170).
 %
-%   See also cell2mat.
+%   See also cell2mat, padcat.
 %==========================================================================
 
 % Check input.
@@ -74,6 +86,11 @@ assert(all(cell2mat(cellfun(@isnumeric, C(:), 'UniformOutput', false))), ...
     ['Inputted cell array contains elements that are non-numeric.',...
     'Check that C does not contain nested cells or non-numeric data.'] );
 
+% KNOWN LIMITATIONS:
+% (a) Empty cell input C = {} currently causes an error when max of empty
+%     cellfun result is computed. Not fixed in this version.
+% (b) Non-double numeric V (e.g., int8) forces output matrix to an integer
+%     class via saturating arithmetic. Undocumented behavior.
 
 % Pre-assign output.
 S	= horzcat( size( C ), 1 );
