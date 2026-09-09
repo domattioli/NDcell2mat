@@ -13,7 +13,7 @@
 
 ## Table of contents
 
-- [1. Status and roadmap](#1-status-and-roadmap)
+- [1. Status](#1-status)
 - [2. The problem](#2-the-problem)
 - [3. Install](#3-install)
 - [4. Usage](#4-usage)
@@ -27,9 +27,9 @@
 - [12. Contributing](#12-contributing)
 - [13. License](#13-license)
 
-## 1. Status and roadmap
+## 1. Status
 
-Version 1.0.0 marks a documentation and packaging update, not a functional change to the underlying algorithm, which has been stable since the function's first File Exchange release in 2021. Open next steps: confirmation of the test suite under real MATLAB (CI runs it on every push; not yet observed passing in this repository), and an update to the File Exchange listing's title, description, tags, and thumbnail, which do not sync automatically from this repository.
+Version 1.0.0 marks a documentation and packaging update, not a functional change to the underlying algorithm, which has been stable since the function's first File Exchange release in 2021.
 
 <div align="right"><a href="#ndcell2mat"><sub>^ Back to top</sub></a></div>
 
@@ -92,7 +92,7 @@ end
 M = NDcell2mat( C, 0 );   % Every node's neighbors, one padded row each.
 ```
 
-Building a fuller `examples/` directory with a runnable Live Script requires a MATLAB session to author and export it; none was available during this documentation pass (see [Status and roadmap](#1-status-and-roadmap)).
+Building a fuller `examples/` directory with a runnable Live Script requires a MATLAB session to author and export it; none was available during this documentation pass (see [Status](#1-status)).
 
 <div align="right"><a href="#ndcell2mat"><sub>^ Back to top</sub></a></div>
 
