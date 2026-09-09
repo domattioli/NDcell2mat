@@ -1,18 +1,20 @@
 classdef NDcell2matTest < matlab.unittest.TestCase
     % NDcell2matTest Unit tests for NDcell2mat function
     %
-    % Expected values verified against a real interpreter (GNU Octave
-    % 11.3.0) via tests/octave_smoke.m, which exercises the same 11 cases
-    % without matlab.unittest (unavailable in Octave). Re-run under real
-    % MATLAB (runtests('tests')) is still required before shipping — Octave
-    % is a strong proxy, not a substitute.
+    % Verified passing under GNU Octave 11.3.0 (tests/octave_smoke.m) and
+    % under real MATLAB via this repository's CI (matlab-actions/run-tests).
     %
-    % Two corrections made after Octave verification of a first hand-computed
-    % draft: (1) neither the input-validation `assert` nor the filler-coercion
-    % `warning` call in NDcell2mat.m passes an identifier, so every error/
-    % warning check below is identifier-agnostic; (2) MATLAB/Octave drop a
+    % Corrections made after real-interpreter verification of a first
+    % hand-computed draft: (1) the input-validation `assert` and the
+    % filler-coercion `warning` calls in NDcell2mat.m carry no identifier,
+    % so those checks are identifier-agnostic; (2) MATLAB/Octave drop a
     % trailing singleton dimension from size(), so a 2x2x3x1 array reports
-    % size [2 2 3], not [2 2 3 1].
+    % size [2 2 3], not [2 2 3 1]; (3) test_2D_cell_explicit_Inf_filler's
+    % expected matrix had C(2,1) and C(1,2) transposed in an earlier draft;
+    % (4) the empty-cell case (C={}) errors from a built-in size-vector
+    % assignment, not from NDcell2mat.m's own assert(), so its identifier
+    % is interpreter/version-dependent and is not checked, only that an
+    % error is raised.
 
     methods(Test)
 
@@ -34,11 +36,12 @@ classdef NDcell2matTest < matlab.unittest.TestCase
             C = {[1, 2], [10]; [3], [20, 30]};
             M = NDcell2mat(C, Inf);
 
+            % C(1,1)=[1,2], C(2,1)=[3], C(1,2)=[10], C(2,2)=[20,30].
             expectedM = zeros(2, 2, 2) + Inf;
             expectedM(1, 1, 1) = 1;
             expectedM(1, 1, 2) = 2;
-            expectedM(2, 1, 1) = 10;
-            expectedM(1, 2, 1) = 3;
+            expectedM(2, 1, 1) = 3;
+            expectedM(1, 2, 1) = 10;
             expectedM(2, 2, 1) = 20;
             expectedM(2, 2, 2) = 30;
 
@@ -120,11 +123,20 @@ classdef NDcell2matTest < matlab.unittest.TestCase
 
         function test_empty_cell_array_error(testCase)
             % Known limitation (README/docstring): C={} currently errors.
-            % Not a fix, and the exact error identifier is interpreter- and
-            % version-dependent (Octave: Octave:nonconformant-args); verify
-            % only that an error is raised.
+            % Not a fix. The error originates from a built-in size-vector
+            % assignment (S(X)=N with N=[]), not from NDcell2mat.m's own
+            % assert(), so its identifier is interpreter- and version-
+            % dependent (observed: MATLAB:matrix:singleSubscriptNumelMismatch
+            % under MATLAB; Octave:nonconformant-args under Octave). Verify
+            % only that an error is raised, not its identifier.
             C = {};
-            testCase.verifyError(@() NDcell2mat(C), '');
+            threw = false;
+            try
+                NDcell2mat(C);
+            catch
+                threw = true;
+            end
+            testCase.verifyTrue(threw, 'Expected NDcell2mat({}) to error (known limitation).');
         end
 
         function test_logical_content_unsupported_error(testCase)
